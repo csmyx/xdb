@@ -15,6 +15,31 @@ target_compile_features(
 
 target_include_directories(
   libxdb
-  PRIVATE include
-  PUBLIC ${CMAKE_SOURCE_DIR}/include
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/include
+)
+
+include(GNUInstallDirs)
+
+install(TARGETS libxdb
+  EXPORT xdb-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+  DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+  EXPORT xdb-targets
+  FILE xdb-config.cmake
+  NAMESPACE xdb::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xdb
 )
