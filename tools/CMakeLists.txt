@@ -1,5 +1,5 @@
 add_executable(xdb xdb.cpp)
-target_link_libraries(xdb PRIVATE xdb::libxdb)
+target_link_libraries(xdb PRIVATE xdb::libxdb PkgConfig::libedit)
 
 include(GNUInstallDirs)
 install(

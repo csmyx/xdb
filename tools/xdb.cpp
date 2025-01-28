@@ -1,14 +1,16 @@
 #include <cstdio>
-#include <libxdb/libxdb.hpp>
+#include "libxdb/libxdb.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <string_view>
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string>
 
 namespace {
   pid_t attach(int argc, char** argv);
+  void handle_command(pid_t pid, std::string_view line);
 }
 
 namespace {
@@ -61,4 +63,6 @@ int main(int argc, char** argv) {
     std::perror("Failed to waitpid");
     return -1;
   }
+
+  char *line = nullptr;
 }
