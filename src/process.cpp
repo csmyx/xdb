@@ -30,10 +30,10 @@ std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path) {
   }
 
   if (pid == 0) {
-    if (ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1) {
+    if (ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) < 0) {
       error::send_errno("Failed to PTRACE_TRACEME");
     }
-    if (execlp(path.c_str(), path.c_str(), nullptr) == -1) {
+    if (execlp(path.c_str(), path.c_str(), nullptr) < 0) {
       error::send_errno("Failed to execlp");
     }
   }
@@ -45,7 +45,7 @@ std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path) {
 
 
 std::unique_ptr<xdb::process> xdb::process::attach(pid_t pid) {
-  if (pid == 0) {
+  if (pid <= 0) {
     error::send("Invalid PID");
   }
   if (ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) < 0) {
