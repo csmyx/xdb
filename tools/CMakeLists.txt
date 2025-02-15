@@ -6,3 +6,6 @@ install(
   TARGETS xdb
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+
+add_executable(demo demo.cpp)
