@@ -41,3 +41,7 @@ my xdebugger
   - ptrace(PTRACE_ATTACH, pid, nullptr, nullptr): 设置允许调试指定进程
   - ptrace(PTRACE_CONT, pid, nullptr, nullptr): 设置指定进程恢复继续执行状态
 - waitpid：阻塞等待子进程发生状态变化
+
+
+##### Handling Errors
+通过exception进行错误处理，继承std::runtime_error构造自定义exception
