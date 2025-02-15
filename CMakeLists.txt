@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
 
+set(CMAKE_TOOLCHAIN_FILE "/home/hugo/vcpkg_dir/vcpkg/scripts/buildsystems/vcpkg.cmake")
 project("xdb" LANGUAGES CXX)
 
 find_package(PkgConfig REQUIRED)
