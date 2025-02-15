@@ -25,7 +25,7 @@ xdb::stop_reason::stop_reason(int wait_status) {
 
 std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path) {
   pid_t pid;
-  if ((pid = fork() < 0)) {
+  if ((pid = fork()) < 0) {
     error::send_errno("Failed to fork");
   }
 
