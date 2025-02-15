@@ -35,7 +35,7 @@ std::unique_ptr<xdb::process> xdb::process::attach(pid_t pid) {
   if (ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) < 0) {
     error::send_errno("Failed to PTRACE_ATTACH");
   }
-  std::unique_ptr<process> proc(new process(pid, /*terminate_on_end=*/true));
+  std::unique_ptr<process> proc(new process(pid, /*terminate_on_end=*/false));
   proc->wait_on_signal();
   return proc;
 }
