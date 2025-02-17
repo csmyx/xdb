@@ -1,3 +1,4 @@
+#include "libxdb/pipe.hpp"
 #include "libxdb/process.hpp"
 #include <readline.h>
 

@@ -1,11 +1,22 @@
 #include <filesystem>
 #include "libxdb/process.hpp"
 #include "libxdb/error.hpp"
+#include "libxdb/pipe.hpp"
 #include <memory>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <algorithm>
 
+namespace xdb {
+  // exit the process after sending error message to channel
+  [[noreturn]]
+  void exit_with_error(xdb::pipe& channel, std::string const& prefix) {
+    auto message = prefix + ": " + std::strerror(errno);
+    channel.write(reinterpret_cast<std::byte*>(message.data()), message.size());
+    exit(-1);
+  }
+}
 
 xdb::stop_reason::stop_reason(int wait_status) {
   if (WIFSTOPPED(wait_status)) {
@@ -24,18 +35,27 @@ xdb::stop_reason::stop_reason(int wait_status) {
 }
 
 std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path) {
+  xdb::pipe channel(true); // pass errors from child to parent
   pid_t pid;
   if ((pid = fork()) < 0) {
     error::send_errno("Failed to fork");
   }
 
   if (pid == 0) {
+    channel.close_read();
     if (ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) < 0) {
-      error::send_errno("Failed to PTRACE_TRACEME");
+      exit_with_error(channel, "Failed to PTRACE_TRACEME");
     }
     if (execlp(path.c_str(), path.c_str(), nullptr) < 0) {
-      error::send_errno("Failed to execlp");
+      exit_with_error(channel, "Failed to execlp");
     }
+  }
+
+  // get error message from child
+  auto err_msg = channel.finish_read();
+  if (!err_msg.empty()) {
+    auto from = reinterpret_cast<char*>(err_msg.data());
+    error::send(std::string(from, from + err_msg.size()));
   }
 
   std::unique_ptr<process> proc(new process(pid, /*terminate_on_end=*/true));
