@@ -1,6 +1,6 @@
 # xdb
 my xdebugger
-
+参考《Building a Debugger (Early Access) by Sy Brand》一书，实现调试器
 
 ### chapter 1
 
@@ -28,20 +28,37 @@ my xdebugger
 使用vcpkg管理依赖
 - 参考文档：https://learn.microsoft.com/zh-cn/vcpkg/consume/manifest-mode?tabs=msbuild%2Cbuild-MSBuild
 
+
+### chapter 2
+  介绍编译调试的相关基础知识，无代码实现
+
 ### chapter 3
 
-##### attach function
-- attach的实现：调用调用ptrace(PTRACE_ATTACH)设置允许向指定进程发送ptrace请求，同时会发送一个SIGSTOP给该进程，使其暂停运行
-- launch的实现：调用fork创建子进程，在子进程中先调用ptrace(PTRACE_TRACEME)，然后再调用execlp运行被调试进程，此时进程启动时会进入到暂停运行状态
-- 父进程通过调用ptrace(PTRACE_CONT)实现continue
+##### 主要系统调用
 
+- ptrace: 是实现调试器的所依赖的最最重要的系统调用，它允许一个进程（通常是调试器）控制另一个进程的执行，读取其内存、寄存器等状态，甚至修改它们。
+ptrace有多种类型，对应不同动作，当前需要用到一下几种：
+  - ptrace(PTRACE_TRACEME, 0, nullptr, nullptr): 设置当前进程为被调试状态
+  - ptrace(PTRACE_ATTACH, pid, nullptr, nullptr): 设置指定进程为被调试状态
+  - ptrace(PTRACE_CONT, pid, nullptr, nullptr): 恢复被调试进程继续执行
+- waitpid：阻塞当前进程，等待指定的子进程状态变化。每次需要改变被调试进程状态时（无论是暂停运行还是恢复运行），主进程都应该调用该函数等待被调试进程完成状态变化。
 
-- ptrace不同请求作用：
-  - ptrace(PTRACE_TRACEME, 0, nullptr, nullptr): 设置本进程为可被调试状态
-  - ptrace(PTRACE_ATTACH, pid, nullptr, nullptr): 设置允许调试指定进程
-  - ptrace(PTRACE_CONT, pid, nullptr, nullptr): 设置指定进程恢复继续执行状态
-- waitpid：阻塞等待子进程发生状态变化
+- kill: 给指定进程发送特定类型信号
+当前用到的相关信号的作用：
+  - kill(pid, SIGSTOP)：暂停指定进程执行
+  - kill(pid, SIGCONT)：恢复指定进程执行，即继续之前暂停的操作
+  - kill(pid, SIGKILL)：终止指定进程
+- fork 和 exec
 
+##### 调试主要流程
+两种方式：
+1. launch方式：启动调试时才创建被调试进程（xdb <binary path>）
+调用fork创建子进程，在子进程中先调用ptrace(PTRACE_TRACEME)，然后再调用execlp运行被调试进程，此时进程启动时会进入到暂停运行状态
+2. attach：调试一个已经启动的进程（xdb -p <pid>）
+调用调用ptrace(PTRACE_ATTACH)设置允许向指定进程发送ptrace请求，同时会发送一个SIGSTOP给该进程，使其暂停运行
+
+##### continue命令
+被调试进程启动时，一开始都处于暂停运行状态，我们实现continue命令来完成恢复执行，简单来说就是通过调用ptrace(PTRACE_CONT)实现
 
 ##### Handling Errors
 通过exception进行错误处理，继承std::runtime_error构造自定义exception
