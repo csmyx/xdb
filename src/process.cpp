@@ -34,7 +34,8 @@ xdb::stop_reason::stop_reason(int wait_status) {
   }
 }
 
-std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path) {
+/// trace: whether to trace the child process (set to false for testing to create a untraced process)
+std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path, bool trace) {
   xdb::pipe channel(true); // pass errors from child to parent
   pid_t pid;
   if ((pid = fork()) < 0) {
@@ -43,7 +44,7 @@ std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path) {
 
   if (pid == 0) {
     channel.close_read();
-    if (ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) < 0) {
+    if (trace && ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) < 0) {
       exit_with_error(channel, "Failed to PTRACE_TRACEME");
     }
     if (execlp(path.c_str(), path.c_str(), nullptr) < 0) {
@@ -58,8 +59,10 @@ std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path) {
     error::send(std::string(from, from + err_msg.size()));
   }
 
-  std::unique_ptr<process> proc(new process(pid, /*terminate_on_end=*/true));
-  proc->wait_on_signal();
+  std::unique_ptr<process> proc(new process(pid, /*terminate_on_end=*/true, trace));
+  if (trace) {
+    proc->wait_on_signal();
+  }
   return proc;
 }
 
@@ -71,7 +74,7 @@ std::unique_ptr<xdb::process> xdb::process::attach(pid_t pid) {
   if (ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) < 0) {
     error::send_errno("Failed to PTRACE_ATTACH");
   }
-  std::unique_ptr<process> proc(new process(pid, /*terminate_on_end=*/false));
+  std::unique_ptr<process> proc(new process(pid, /*terminate_on_end=*/false, true));
   proc->wait_on_signal();
   return proc;
 }
@@ -81,14 +84,15 @@ xdb::process::~process() {
     int status;
 
     // stop it before detaching
-    if (state_ == process_state::running) {
-      kill(pid_, SIGSTOP);
-      waitpid(pid_, &status, 0);
+    if (is_attached_) {
+      if (state_ == process_state::running) {
+        kill(pid_, SIGSTOP);
+        waitpid(pid_, &status, 0);
+      }
+      // detach and let it continue
+      ptrace(PTRACE_DETACH, pid_, nullptr, nullptr);
+      kill(pid_, SIGCONT);
     }
-
-    // detach and let it continue
-    ptrace(PTRACE_DETACH, pid_, nullptr, nullptr);
-    kill(pid_, SIGCONT);
 
     // terminate it if needed
     if (terminated_on_end_) {

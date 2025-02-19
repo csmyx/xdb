@@ -25,7 +25,7 @@ namespace xdb {
 
   class process {
     public:
-      static std::unique_ptr<process> launch(std::filesystem::path path);
+      static std::unique_ptr<process> launch(std::filesystem::path path, bool trace=true);
       static std::unique_ptr<process> attach(pid_t pid);
 
       void resume();
@@ -39,12 +39,13 @@ namespace xdb {
       ~process();
 
     private: 
-      process(pid_t pid, bool termiante_on_end)
-        : pid_(pid), terminated_on_end_(termiante_on_end) {}
+      process(pid_t pid, bool termianted_on_end, bool is_attached)
+        : pid_(pid), terminated_on_end_(termianted_on_end), is_attached_(is_attached) {}
 
       pid_t pid_ = 0;
       process_state state_ = process_state::stopped;
       bool terminated_on_end_ = true;
+      bool is_attached_ = true;
   };
 
 }
