@@ -32,4 +32,27 @@ TEST_CASE("process::attach success", "[process]") {
   auto proc = process::attach(target->pid());
   REQUIRE(get_process_status(target->pid()) == 't');
 }
-
+TEST_CASE("process::resume success", "[process]") {
+  {
+    auto proc =  process::launch("build/test/targets/run_endlessly");
+    REQUIRE(get_process_status(proc->pid()) == 't');
+    proc->resume();
+    REQUIRE(get_process_status(proc->pid()) == 'R');
+  }
+  {
+    auto target =  process::launch("build/test/targets/run_endlessly", false);
+    auto proc = process::attach(target->pid());
+    REQUIRE(get_process_status(proc->pid()) == 't');
+    proc->resume();
+    REQUIRE(get_process_status(proc->pid()) == 'R');
+  }
+}
+TEST_CASE("process::resume already terminated", "[process]") {
+  auto proc = process::launch("build/test/targets/end_immediately");
+  std::cout << get_process_status(proc->pid()) << std::endl;
+  proc->resume();
+  std::cout << get_process_status(proc->pid()) << std::endl;
+  proc->wait_on_signal();
+  // proc has already terminated
+  REQUIRE_THROWS_AS(proc->resume(), error);
+}
