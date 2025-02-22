@@ -72,16 +72,19 @@ ptrace有多种类型，对应不同动作，当前需要用到一下几种：
 
 ## chapter 5
 
-#### 本章实现
-- 新增registers.hpp封装寄存器读写操作
-
-- 新增registers_info.hpp封装寄存器信息
-  - 用宏（书里叫X-macro的宏）来封装寄存器的定义，统一放到registers.inc文件中，然后register_info.hpp中直接通过#include的方式引用，这样不用每次都枚举一遍所有寄存器。
-  - 除此之外，registers.inc中还定义了一些计算寄存器偏移的函数，以便后续读写寄存器时使用
-  - 在register_info.hpp中的g_register_infos数组全局保存了所有寄存器信息，可以通过register_info_by_xx函数按特定方式查询所需寄存器信息
+#### 封装寄存器信息
+- 封装寄存器信息到registers_info.hpp，用宏定义（书里叫X-macro的宏）的方式将寄存器信息统一定义到registers.inc文件中，在register_info.hpp中直接include该文件来完成定义
+- 除此之外，registers.inc中还定义了一些计算寄存器偏移的函数，以便后续读写寄存器时使用
+- 在register_info.hpp中的g_register_infos数组全局保存了所有寄存器信息，可以通过register_info_by_xx函数按特定方式查询所需寄存器信息
 - 新增types.hpp
 
-与寄存器管理相关的ptrace请求类型:
+#### 封装寄存器读写操作
+- 与寄存器读写相关的库定义接口在sys/user.h中，其中struct user定义的寄存器的接口，我理解就是库会通过该结构体提供我们所需要的寄存器信息，我们的读写都需要通过该结构体定义来完成。struct user中有三个成员变量需要我们关注，regs/i387/u_debugreg分别封装了通用寄存器、浮点寄存器、debug专用寄存器的数据。
+- 新增registers.hpp封装寄存器读写操作，简单来说，读写操作就是将数据从user结构体中读出来，或者将数据写入到user结构体中。为了方便实现，使用std::bytes类型的字节流来表示读写中间数据流。
+- 读操作: 
+- 写操作
+
+#### 与寄存器管理相关的ptrace请求类型
 - PTRACE_GETREGS & PTRACE_SETREGS：读/写通用寄存器，sys/user.h中的user_regs_struct定义
 - PTRACE_GETFPREGS & PTRACE_SETFPREGS：读/写浮点寄存器(x87/MMX/SSE)，sys/user.h中的user_fpregs_struct定义
 - PTRACE_PEEKUSER: 读debug寄存器
@@ -94,4 +97,6 @@ ptrace有多种类型，对应不同动作，当前需要用到一下几种：
 #### inline用法
 - 有些时候，当需要将函数/变量实现放在头文件中（比如register_info.hpp中的g_register_infos和register_info_by_xx），我们需要在定义前面加inline关键字，避免重定义错误（编译单元即使多次include头文件，也只会生成一次inline的函数/变量）
 #### std::variant
-- 使用该类型封装寄存器读写操作返回类型
+- C++17引入，可以看作的类型安全的union，该类型保存值实际类型，当通过错误的类型方式访问时会抛出异常，而普通的union却不会。我们使用该类型封装寄存器读写操作返回类型。
+- std::copy & std::memcopy主要区别：前者类型安全，后者不是。当需要拷贝的是非POD类型时，只能使用std::copy。
+- 在构造函数中使用this指针：本章在process类中新增了一个register成员regs_，在process的构造函数中需要构造regs_，这里有一个有意思的细节，就是我们需要使用this指针来构造regs_，但是此时我们process还没有初始化完成，那么这里使用this指针是安全的吗？~~废话，都这么用了肯定安全。~~but why? because: 我们只是使用this来获取引用，而没有解引用this指针。前者安全是因为：此时已经完成process的内存分配，内存地址的是已经确定了的；后者不安全是因为：这块process的内存还未初始化，解引用访问内存内容是不安全的。
