@@ -1,7 +1,7 @@
 #ifndef XDB_PROCESS_HPP
 #define XDB_PROCESS_HPP
 
-#include "libxdb/error.hpp"
+#include <libxdb/error.hpp>
 #include <cassert>
 #include <iostream>
 #include <memory>

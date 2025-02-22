@@ -1,7 +1,7 @@
 #include <filesystem>
-#include "libxdb/process.hpp"
-#include "libxdb/error.hpp"
-#include "libxdb/pipe.hpp"
+#include <libxdb/process.hpp>
+#include <libxdb/error.hpp>
+#include <libxdb/pipe.hpp>
 #include <memory>
 #include <sys/ptrace.h>
 #include <sys/wait.h>

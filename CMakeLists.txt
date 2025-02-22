@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.19)
 
+### these are my personal configurations, you can modify them with your own
 set(CMAKE_TOOLCHAIN_FILE "/home/hugo/vcpkg_dir/vcpkg/scripts/buildsystems/vcpkg.cmake")
+set(CMAKE_C_COMPILER "clang")
+set(CMAKE_CXX_COMPILER "clang++")
+###
+
 project("xdb" LANGUAGES CXX)
 
 find_package(PkgConfig REQUIRED)
