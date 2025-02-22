@@ -28,19 +28,19 @@ TEST_CASE("process::launch no such program", "[process]") {
   REQUIRE_THROWS_AS(process::launch("you_do_not_have_to_be_good"), error);
 }
 TEST_CASE("process::attach success", "[process]") {
-  auto target =  process::launch("build/test/targets/run_endlessly", false);
+  auto target =  process::launch("targets/run_endlessly", false);
   auto proc = process::attach(target->pid());
   REQUIRE(get_process_status(target->pid()) == 't');
 }
 TEST_CASE("process::resume success", "[process]") {
   {
-    auto proc =  process::launch("build/test/targets/run_endlessly");
+    auto proc =  process::launch("targets/run_endlessly");
     REQUIRE(get_process_status(proc->pid()) == 't');
     proc->resume();
     REQUIRE(get_process_status(proc->pid()) == 'R');
   }
   {
-    auto target =  process::launch("build/test/targets/run_endlessly", false);
+    auto target =  process::launch("targets/run_endlessly", false);
     auto proc = process::attach(target->pid());
     REQUIRE(get_process_status(proc->pid()) == 't');
     proc->resume();
@@ -48,7 +48,7 @@ TEST_CASE("process::resume success", "[process]") {
   }
 }
 TEST_CASE("process::resume already terminated", "[process]") {
-  auto proc = process::launch("build/test/targets/end_immediately");
+  auto proc = process::launch("targets/end_immediately");
   std::cout << get_process_status(proc->pid()) << std::endl;
   proc->resume();
   std::cout << get_process_status(proc->pid()) << std::endl;
