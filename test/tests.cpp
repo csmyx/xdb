@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cmath>
+#include <cstdint>
 #include <libxdb/process.hpp>
 #include <csignal>
 #include <fstream>
@@ -61,5 +63,12 @@ TEST_CASE("registers: writing issue1", "[registers]") {
   auto proc = process::attach(target->pid());
   auto& reg = proc->get_registers();
   reg.write(register_info_by_name("ah"), std::uint8_t{0x12});
+}
+TEST_CASE("registers: writing issue2", "[registers]") {
+  auto target =  process::launch("targets/run_endlessly", false);
+  auto proc = process::attach(target->pid());
+  auto& reg = proc->get_registers();
+  // test writing FPR registers
+  reg.write(register_info_by_name("fcw"), std::uint16_t{0x0102});
 }
 

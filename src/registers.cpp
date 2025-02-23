@@ -50,8 +50,13 @@ void xdb::registers::write(const xdb::register_info& info, xdb::value value) {
     }
   }, value);
 
-  // align the offset to 8 bytes
-  auto aligned_offset = info.offset & ~0b111;
-  proc_->write_user_area(aligned_offset, 
-    from_bytes<std::uint64_t>(bytes + aligned_offset));
+  // use PTRACE_SETFPREGS to write floating point registers
+  if (info.type == register_type::fpr) {
+    proc_->write_fprs(data_.i387);
+  } else {
+    // align the offset to 8 bytes
+    auto aligned_offset = info.offset & ~0b111;
+    proc_->write_user_area(aligned_offset, 
+      from_bytes<std::uint64_t>(bytes + aligned_offset));
+  }
 }
