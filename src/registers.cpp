@@ -50,6 +50,8 @@ void xdb::registers::write(const xdb::register_info& info, xdb::value value) {
     }
   }, value);
 
-  proc_->write_user_area(info.offset, 
-    from_bytes<std::uint64_t>(bytes + info.offset));
+  // align the offset to 8 bytes
+  auto aligned_offset = info.offset & ~0b111;
+  proc_->write_user_area(aligned_offset, 
+    from_bytes<std::uint64_t>(bytes + aligned_offset));
 }

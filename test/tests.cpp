@@ -56,3 +56,10 @@ TEST_CASE("process::resume already terminated", "[process]") {
   // proc has already terminated
   REQUIRE_THROWS_AS(proc->resume(), error);
 }
+TEST_CASE("registers: writing issue1", "[registers]") {
+  auto target =  process::launch("targets/run_endlessly", false);
+  auto proc = process::attach(target->pid());
+  auto& reg = proc->get_registers();
+  reg.write(register_info_by_name("ah"), std::uint8_t{0x12});
+}
+
