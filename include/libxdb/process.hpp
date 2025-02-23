@@ -1,6 +1,8 @@
 #ifndef XDB_PROCESS_HPP
 #define XDB_PROCESS_HPP
 
+#include <libxdb/registers.hpp>
+#include <cstdint>
 #include <libxdb/error.hpp>
 #include <cassert>
 #include <iostream>
@@ -25,7 +27,9 @@ namespace xdb {
 
   class process {
     public:
+      // debug entry of launching a new process
       static std::unique_ptr<process> launch(std::filesystem::path path, bool trace=true);
+      // debug entry of attaching to an existing process
       static std::unique_ptr<process> attach(pid_t pid);
 
       void resume();
@@ -38,14 +42,24 @@ namespace xdb {
       process& operator=(const process&) = delete;
       ~process();
 
+      registers& get_registers() { return *regs_; } 
+      const registers& get_registers() const { return *regs_; }
+      // write regisers
+      void write_user_area(std::size_t offset, std::uint64_t data);
+
     private: 
       process(pid_t pid, bool termianted_on_end, bool is_attached)
-        : pid_(pid), terminated_on_end_(termianted_on_end), is_attached_(is_attached) {}
+        : pid_(pid), terminated_on_end_(termianted_on_end),
+        is_attached_(is_attached), regs_(new registers(*this)) {}
+      
+      // read regisers
+      void read_all_registers();
 
       pid_t pid_ = 0;
       process_state state_ = process_state::stopped;
       bool terminated_on_end_ = true;
       bool is_attached_ = true;
+      std::unique_ptr<registers> regs_;
   };
 
 }
