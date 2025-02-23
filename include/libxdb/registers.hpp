@@ -3,7 +3,6 @@
 
 
 #include <libxdb/types.hpp>
-#include <libxdb/process.hpp>
 #include <libxdb/register_info.hpp>
 
 namespace xdb {

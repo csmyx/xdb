@@ -1,7 +1,8 @@
+#include <iostream>
 #include <libxdb/bits.hpp>
 #include <libxdb/register_info.hpp>
 #include <libxdb/types.hpp>
-#include <libxdb/registers.hpp>
+#include <libxdb/process.hpp>
 
 xdb::value xdb::registers::read(const register_info& info) const {
   auto bytes = as_bytes(data_);
@@ -33,5 +34,22 @@ xdb::value xdb::registers::read(const register_info& info) const {
   } else {
     error::send("Invalid register format");
   }
+}
 
+void xdb::registers::write(const xdb::register_info& info, xdb::value value) {
+  auto bytes = as_bytes(data_);
+  std::visit([&](auto& v){
+    auto val_bytes = as_bytes(v);
+    if (sizeof(v) == info.size) {
+      // I think we can also use std::memcopy rather than std::copy here
+      std::copy(val_bytes, val_bytes + sizeof(v), bytes + info.offset);
+    } else {
+      std::cerr << "sdb::register::write called with "
+      "mismatched register and value sizes";
+      std::terminate();
+    }
+  }, value);
+
+  proc_->write_user_area(info.offset, 
+    from_bytes<std::uint64_t>(bytes + info.offset));
 }
