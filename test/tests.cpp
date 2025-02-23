@@ -71,4 +71,11 @@ TEST_CASE("registers: writing issue2", "[registers]") {
   // test writing FPR registers
   reg.write(register_info_by_name("fcw"), std::uint16_t{0x0102});
 }
+TEST_CASE("registers: writing issue3", "[registers]") {
+  auto target =  process::launch("targets/run_endlessly", false);
+  auto proc = process::attach(target->pid());
+  auto& reg = proc->get_registers();
+  
+  reg.write(register_info_by_name("rax"), std::uint16_t{0x02});
+}
 

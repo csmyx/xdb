@@ -3,6 +3,31 @@
 #include <libxdb/register_info.hpp>
 #include <libxdb/types.hpp>
 #include <libxdb/process.hpp>
+#include <type_traits>
+
+namespace xdb {
+  // widen the value to the register size
+  template<class T>
+  xdb::byte128 widen(const xdb::register_info& info, T t) {
+    if constexpr (std::is_floating_point_v<T>) {
+      if (info.format == register_format::double_float) {
+        return as_byte128(static_cast<double>(t));
+      }
+      if (info.format == register_format::long_double) {
+        return as_byte128(static_cast<long double>(t));
+      }
+    } else if constexpr (std::is_signed_v<T>) {
+      if (info.format == register_format::uint) {
+        switch (info.size) {
+          case 2: return as_byte128(static_cast<std::int16_t>(t));
+          case 4: return as_byte128(static_cast<std::int32_t>(t));
+          case 8: return as_byte128(static_cast<std::int64_t>(t));
+        }
+      }
+    }
+    return as_byte128(t);
+  }
+}
 
 xdb::value xdb::registers::read(const register_info& info) const {
   auto bytes = as_bytes(data_);
@@ -39,12 +64,13 @@ xdb::value xdb::registers::read(const register_info& info) const {
 void xdb::registers::write(const xdb::register_info& info, xdb::value value) {
   auto bytes = as_bytes(data_);
   std::visit([&](auto& v){
-    auto val_bytes = as_bytes(v);
-    if (sizeof(v) == info.size) {
+    if (sizeof(v) <= info.size) {
+      auto wide = widen(info, v);
+      auto val_bytes = as_bytes(wide);
       // I think we can also use std::memcopy rather than std::copy here
       std::copy(val_bytes, val_bytes + sizeof(v), bytes + info.offset);
     } else {
-      std::cerr << "sdb::register::write called with "
+      std::cerr << "xdb::register::write called with "
       "mismatched register and value sizes";
       std::terminate();
     }
