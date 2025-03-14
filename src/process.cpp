@@ -60,6 +60,7 @@ std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path, b
   // get error message from child
   auto err_msg = channel.finish_read();
   if (!err_msg.empty()) {
+    waitpid(pid, nullptr, 0);
     auto from = reinterpret_cast<char*>(err_msg.data());
     error::send(std::string(from, from + err_msg.size()));
   }
