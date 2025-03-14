@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <filesystem>
+#include <optional>
 #include <vector>
 
 
@@ -28,7 +29,7 @@ namespace xdb {
   class process {
     public:
       // debug entry of launching a new process
-      static std::unique_ptr<process> launch(std::filesystem::path path, bool trace=true);
+      static std::unique_ptr<process> launch(std::filesystem::path path, bool trace=true, std::optional<int> stdout_replacement=std::nullopt);
       // debug entry of attaching to an existing process
       static std::unique_ptr<process> attach(pid_t pid);
 

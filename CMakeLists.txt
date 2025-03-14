@@ -6,7 +6,7 @@ set(CMAKE_C_COMPILER "clang")
 set(CMAKE_CXX_COMPILER "clang++")
 ###
 
-project("xdb" LANGUAGES CXX)
+project("xdb" LANGUAGES CXX ASM)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libedit REQUIRED IMPORTED_TARGET libedit)

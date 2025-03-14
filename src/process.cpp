@@ -35,7 +35,7 @@ xdb::stop_reason::stop_reason(int wait_status) {
 }
 
 /// trace: whether to trace the child process (set to false for testing to create a untraced process)
-std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path, bool trace) {
+std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path, bool trace, std::optional<int> stdout_replacement) {
   xdb::pipe channel(true); // pass errors from child to parent
   pid_t pid;
   if ((pid = fork()) < 0) {
@@ -44,6 +44,11 @@ std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path, b
 
   if (pid == 0) {
     channel.close_read();
+    if (stdout_replacement) {
+      if (dup2(*stdout_replacement, STDOUT_FILENO) < 0) {
+        exit_with_error(channel, "Failed to replace stdout");
+      }
+    }
     if (trace && ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) < 0) {
       exit_with_error(channel, "Failed to PTRACE_TRACEME");
     }
