@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cstdint>
 #include <libxdb/process.hpp>
+#include <libxdb/bits.hpp>
+#include <libxdb/pipe.hpp>
 #include <csignal>
 #include <fstream>
 
@@ -77,5 +79,23 @@ TEST_CASE("registers: writing issue3", "[registers]") {
   auto& reg = proc->get_registers();
   
   reg.write(register_info_by_name("rax"), std::uint16_t{0x02});
+}
+TEST_CASE("write rigister wordks", "[register]") {
+  bool close_on_exec = false;
+  xdb::pipe channel(close_on_exec);
+  auto proc= xdb::process::launch("targets/reg_write", true, channel.get_write_fd());
+  channel.close_write();
+
+  proc->resume();
+  proc->wait_on_signal();
+
+  auto& regs = proc->get_registers();
+  regs.write(register_info_by_id(register_id::rsi), 0xcafecafe);
+
+  proc->resume();
+  proc->wait_on_signal();
+
+  auto output = channel.read();
+  REQUIRE(to_string_view(output) == "0xcafecafe");
 }
 

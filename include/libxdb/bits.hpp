@@ -4,6 +4,8 @@
 #include <libxdb/types.hpp>
 #include <cstddef>
 #include <cstring>
+#include <string_view>
+#include <vector>
 
 namespace xdb {
   template<class To>
@@ -35,6 +37,14 @@ namespace xdb {
     byte128 result{};
     std::memcpy(result.data(), &from, sizeof(From));
     return result;
+  }
+  
+  inline std::string_view to_string_view(const std::byte* data, std::size_t size) {
+    return { reinterpret_cast<const char*>(data), size };
+  }
+  
+  inline std::string_view to_string_view(const std::vector<std::byte>& data) {
+    return to_string_view(data.data(), data.size());
   }
 }
 

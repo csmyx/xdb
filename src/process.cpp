@@ -45,6 +45,7 @@ std::unique_ptr<xdb::process> xdb::process::launch(std::filesystem::path path, b
   if (pid == 0) {
     channel.close_read();
     if (stdout_replacement) {
+      close(STDOUT_FILENO);
       if (dup2(*stdout_replacement, STDOUT_FILENO) < 0) {
         exit_with_error(channel, "Failed to replace stdout");
       }
