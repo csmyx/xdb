@@ -49,10 +49,10 @@ xdb::value xdb::registers::read(const register_info& info) const {
   } else if (info.format == register_format::long_double) {
     return from_bytes<long double>(bytes + info.offset);
   } else if (info.format == register_format::vector) {
-    if (info.size == 16) {
+    if (info.size == 8) {
       return from_bytes<byte64>(bytes + info.offset);
-    } else if (info.size == 8) {
-      return as_byte64(bytes + info.offset);
+    } else if (info.size == 16) {
+      return from_bytes<byte128>(bytes + info.offset);
     } else {
       error::send("Invalid register size");
     }
