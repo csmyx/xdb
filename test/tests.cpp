@@ -127,3 +127,44 @@ TEST_CASE("write rigister wordks", "[register]") {
   }
 }
 
+TEST_CASE("read rigister wordks", "[register]") {
+  auto proc= xdb::process::launch("targets/reg_read");
+  auto& regs = proc->get_registers();
+  proc->resume();
+  proc->wait_on_signal();
+
+  {
+    auto value = regs.read_by_id<std::uint64_t>(register_id::r13);
+    REQUIRE(value == 0xcafecafe);
+    proc->resume();
+    proc->wait_on_signal();
+  }
+
+  {
+    auto value = regs.read_by_id<std::uint8_t>(register_id::r13b);
+    REQUIRE(value == 42);
+    proc->resume();
+    proc->wait_on_signal();
+  }
+
+  {
+    auto value = regs.read_by_id<xdb::byte64>(register_id::mm0);
+    REQUIRE(value == xdb::as_byte64(0x01020304ULL));
+    proc->resume();
+    proc->wait_on_signal();
+  }
+
+  {
+    auto value = regs.read_by_id<xdb::byte128>(register_id::xmm0);
+    REQUIRE(value == xdb::as_byte128(64.125));
+    proc->resume();
+    proc->wait_on_signal();
+  }
+
+  {
+    auto value = regs.read_by_id<long double>(register_id::st0);
+    REQUIRE(value == 64.125L);
+    proc->resume();
+    proc->wait_on_signal();
+  }
+}
