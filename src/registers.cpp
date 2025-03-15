@@ -65,10 +65,10 @@ void xdb::registers::write(const xdb::register_info& info, xdb::value value) {
   auto bytes = as_bytes(data_);
   std::visit([&](auto& v){
     if (sizeof(v) <= info.size) {
-      auto wide = widen(info, v);
-      auto val_bytes = as_bytes(wide);
+      auto aligned_v = widen(info, v);
+      auto ptr = as_bytes(aligned_v);
       // I think we can also use std::memcopy rather than std::copy here
-      std::copy(val_bytes, val_bytes + sizeof(v), bytes + info.offset);
+      std::copy(ptr, ptr + info.size, bytes + info.offset);
     } else {
       std::cerr << "xdb::register::write called with "
       "mismatched register and value sizes";
