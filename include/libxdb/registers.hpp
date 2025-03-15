@@ -16,6 +16,14 @@ namespace xdb {
       value read(const register_info& info) const;
       void write(const register_info& info, value value);
 
+      template<class T>
+      T read_by_id(register_id id) const {
+        return std::get<T>(read(register_info_by_id(id)));
+      }
+      void write_by_id(register_id id, xdb::value v) {
+        write(register_info_by_id(id), v);
+      }
+
     private:
       friend process;
       registers(process& proc): proc_(&proc) {}

@@ -81,10 +81,10 @@ TEST_CASE("registers: writing issue3", "[registers]") {
   reg.write(register_info_by_name("rax"), std::uint16_t{0x02});
 }
 
-void test_register_helper(xdb::process& proc, const xdb::register_info& info, xdb::value value) {
+void test_reg_write_helper(xdb::process& proc, xdb::register_id id, xdb::value value) {
   assert(proc.state() == xdb::process_state::stopped);
   auto& regs = proc.get_registers();
-  regs.write(info, value);
+  regs.write_by_id(id, value);
 
   proc.resume();
   proc.wait_on_signal();
@@ -98,28 +98,28 @@ TEST_CASE("write rigister wordks", "[register]") {
   proc->wait_on_signal();
 
   {
-    test_register_helper(*proc, register_info_by_id(register_id::rsi), 0x01020304);
+    test_reg_write_helper(*proc, register_id::rsi, 0x01020304);
     auto output = channel.read();
     REQUIRE(to_string_view(output) == "0x01020304");
   }
 
   {
-    test_register_helper(*proc, register_info_by_id(register_id::mm0), 0x0102030405060708);
+    test_reg_write_helper(*proc, register_id::mm0, 0x0102030405060708);
     auto output = channel.read();
     REQUIRE(to_string_view(output) == "0x0102030405060708");
   }
 
   {
-    test_register_helper(*proc, register_info_by_id(register_id::xmm0), 3.14);
+    test_reg_write_helper(*proc, register_id::xmm0, 3.14);
     auto output = channel.read();
     REQUIRE(to_string_view(output) == "3.14");
   }
   
   {
     auto& regs = proc->get_registers();
-    regs.write(register_info_by_id(register_id::st0), 42.24l);
-    regs.write(register_info_by_id(register_id::fsw), std::uint16_t{0b0011100000000000});
-    regs.write(register_info_by_id(register_id::ftw), std::uint16_t{0b0011111111111111});
+    regs.write_by_id(register_id::st0, 42.24l);
+    regs.write_by_id(register_id::fsw, std::uint16_t{0b0011100000000000});
+    regs.write_by_id(register_id::ftw, std::uint16_t{0b0011111111111111});
     proc->resume();
     proc->wait_on_signal();
     auto output = channel.read();
