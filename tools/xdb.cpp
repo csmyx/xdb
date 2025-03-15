@@ -1,6 +1,7 @@
 #include <libxdb/pipe.hpp>
 #include <libxdb/process.hpp>
 #include <readline.h>
+#include <signal.h>
 
 namespace {
   std::unique_ptr<xdb::process> attach(int argc, char** argv) {
@@ -47,6 +48,22 @@ namespace {
     std::cout << std::endl;
   }
 
+  void print_help(const std::vector<std::string>& args) {
+    if (args.size() == 1) {
+      std::cerr << "Available commands:\n"
+                << "    continue - Resume the process\n"
+                << "    register - Commands for operating on registers" << std::endl;
+    } else if (is_prefix(args[1], "register")) {
+      std::cerr << "Available commands:\n"
+                << "    read\n"
+                << "    read <register>\n"
+                << "    read all\n"
+                << "    write <register> <value>" << std::endl;
+    } else {
+      std::cerr << "No help available on that" << std::endl;
+    }
+  }
+
   void handle_command(std::unique_ptr<xdb::process>& process, std::string_view line) {
     auto args = split(line, ' ');
     assert(args.size() > 0);
@@ -56,6 +73,13 @@ namespace {
       process->resume();
       auto reason = process->wait_on_signal();
       print_stop_reason(*process, reason);
+    } else if (is_prefix(command, "help")) {
+      print_help(args);
+    } else if (is_prefix(command, "quit")) {
+      assert(kill(process->pid(), SIGTERM) == 0);
+      process->wait_on_signal();
+      std::cerr << static_cast<int>(process->state())  << std::endl;
+      exit(0);
     } else {
       std::cerr << "Unkonw command\n";
     }

@@ -1,0 +1,16 @@
+# .clang-format 配置
+BasedOnStyle: Google          # 基于 Google 风格，推荐的基础风格
+UseTab: Never                # 始终使用空格，不使用 Tab
+IndentWidth: 2               # 缩进宽度为 2 个空格
+TabWidth: 2                  # Tab 宽度为 2（尽管不使用 Tab，仍需定义）
+ColumnLimit: 160              # 每行最大字符数
+ContinuationIndentWidth: 2   # 续行缩进宽度为 2 个空格
+AlignAfterOpenBracket: Align # 对齐开括号后的内容（如函数参数）
+AllowShortFunctionsOnASingleLine: Empty # 单行允许空函数
+BraceWrapping:
+  AfterClass: true           # 类定义后换行
+  AfterControlStatement: true # 控制语句（如 if）后换行
+  AfterFunction: true        # 函数定义后换行
+SpaceBeforeParens: ControlStatements # 控制语句前的空格（如 if (x)）
+SpacesInParentheses: false  # 括号内不加空格
+SpacesInSquareBrackets: false # 方括号内不加空格

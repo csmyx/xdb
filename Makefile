@@ -17,6 +17,10 @@ build:
 # Target to rebuild the project
 rebuild: clean configure build
 
+# Target to run the xdb executable
+run:
+	./$(BUILD_DIR)/tools/xdb
+
 # Target to clean the build directory
 clean:
 	rm -rf $(BUILD_DIR)
