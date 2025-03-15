@@ -97,5 +97,15 @@ TEST_CASE("write rigister wordks", "[register]") {
 
   auto output = channel.read();
   REQUIRE(to_string_view(output) == "0xcafecafe");
+
+  auto& regs1 = proc->get_registers();
+  regs.write(register_info_by_id(register_id::mm0), 0xcafecafe01020304);
+
+  proc->resume();
+  proc->wait_on_signal();
+
+  auto output1 = channel.read();
+  REQUIRE(to_string_view(output1) == "0xcafecafe01020304");
+  // test_register_helper
 }
 

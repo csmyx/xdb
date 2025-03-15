@@ -1,7 +1,7 @@
 .global main
 
 .section .data
-hex_format: .asciz "%#x"
+hex_format: .asciz "%#llx"
 
 .section .text
 
@@ -30,6 +30,18 @@ hex_format: .asciz "%#x"
     call printf@plt
     movq $0, %rdi
     call fflush@plt
+
+    trap
+
+    # print the value of %mm0
+    movq %mm0, %rsi
+    leaq hex_format(%rip), %rdi
+    movq $0, %rax
+    call printf@plt
+    movq $0, %rdi
+    call fflush@plt
+
+    trap
 
     popq %rbp
     movq $0, %rax
