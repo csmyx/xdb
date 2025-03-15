@@ -98,15 +98,32 @@ TEST_CASE("write rigister wordks", "[register]") {
   proc->wait_on_signal();
 
   {
-    test_register_helper(*proc, register_info_by_id(register_id::rsi), 0xcafecafe);
+    test_register_helper(*proc, register_info_by_id(register_id::rsi), 0x01020304);
     auto output = channel.read();
-    REQUIRE(to_string_view(output) == "0x00000000cafecafe");
+    REQUIRE(to_string_view(output) == "0x01020304");
   }
 
   {
     test_register_helper(*proc, register_info_by_id(register_id::mm0), 0x0102030405060708);
     auto output = channel.read();
     REQUIRE(to_string_view(output) == "0x0102030405060708");
+  }
+
+  {
+    test_register_helper(*proc, register_info_by_id(register_id::xmm0), 3.14);
+    auto output = channel.read();
+    REQUIRE(to_string_view(output) == "3.14");
+  }
+  
+  {
+    auto& regs = proc->get_registers();
+    regs.write(register_info_by_id(register_id::st0), 42.24l);
+    regs.write(register_info_by_id(register_id::fsw), std::uint16_t{0b0011100000000000});
+    regs.write(register_info_by_id(register_id::ftw), std::uint16_t{0b0011111111111111});
+    proc->resume();
+    proc->wait_on_signal();
+    auto output = channel.read();
+    REQUIRE(to_string_view(output) == "42.24");
   }
 }
 

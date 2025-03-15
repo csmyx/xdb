@@ -1,7 +1,10 @@
 .global main
 
 .section .data
-hex_format: .asciz "%#018llx"
+hex_format_4: .asciz "%#010x"
+hex_format_8: .asciz "%#018llx"
+float_format: .asciz "%.2f"
+long_float_format: .asciz "%.2Lf"
 
 .section .text
 
@@ -25,7 +28,7 @@ hex_format: .asciz "%#018llx"
     trap
 
     # print the value of %rsi
-    leaq hex_format(%rip), %rdi
+    leaq hex_format_4(%rip), %rdi
     movq $0, %rax
     call printf@plt
     movq $0, %rdi
@@ -35,11 +38,33 @@ hex_format: .asciz "%#018llx"
 
     # print the value of %mm0
     movq %mm0, %rsi
-    leaq hex_format(%rip), %rdi
+    leaq hex_format_8(%rip), %rdi
     movq $0, %rax
     call printf@plt
     movq $0, %rdi
     call fflush@plt
+
+    trap
+
+    # print the value of %xmm0
+    leaq float_format(%rip), %rdi
+    # indicate there is a vector argument
+    movq $1, %rax
+    call printf@plt
+    movq $0, %rdi
+    call fflush@plt
+
+    trap
+
+    # print the value of %st0
+    subq $16, %rsp
+    fstpt (%rsp)
+    leaq long_float_format(%rip), %rdi
+    movq $0, %rax
+    call printf@plt
+    movq $0, %rdi
+    call fflush@plt
+    addq $16, %rsp
 
     trap
 
