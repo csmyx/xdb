@@ -80,32 +80,33 @@ TEST_CASE("registers: writing issue3", "[registers]") {
   
   reg.write(register_info_by_name("rax"), std::uint16_t{0x02});
 }
+
+void test_register_helper(xdb::process& proc, const xdb::register_info& info, xdb::value value) {
+  assert(proc.state() == xdb::process_state::stopped);
+  auto& regs = proc.get_registers();
+  regs.write(info, value);
+
+  proc.resume();
+  proc.wait_on_signal();
+}
 TEST_CASE("write rigister wordks", "[register]") {
   bool close_on_exec = false;
   xdb::pipe channel(close_on_exec);
   auto proc= xdb::process::launch("targets/reg_write", true, channel.get_write_fd());
   channel.close_write();
-
   proc->resume();
   proc->wait_on_signal();
 
-  auto& regs = proc->get_registers();
-  regs.write(register_info_by_id(register_id::rsi), 0xcafecafe);
+  {
+    test_register_helper(*proc, register_info_by_id(register_id::rsi), 0xcafecafe);
+    auto output = channel.read();
+    REQUIRE(to_string_view(output) == "0x00000000cafecafe");
+  }
 
-  proc->resume();
-  proc->wait_on_signal();
-
-  auto output = channel.read();
-  REQUIRE(to_string_view(output) == "0xcafecafe");
-
-  auto& regs1 = proc->get_registers();
-  regs.write(register_info_by_id(register_id::mm0), 0xcafecafe01020304);
-
-  proc->resume();
-  proc->wait_on_signal();
-
-  auto output1 = channel.read();
-  REQUIRE(to_string_view(output1) == "0xcafecafe01020304");
-  // test_register_helper
+  {
+    test_register_helper(*proc, register_info_by_id(register_id::mm0), 0x0102030405060708);
+    auto output = channel.read();
+    REQUIRE(to_string_view(output) == "0x0102030405060708");
+  }
 }
 

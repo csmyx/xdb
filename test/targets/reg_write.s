@@ -1,7 +1,7 @@
 .global main
 
 .section .data
-hex_format: .asciz "%#llx"
+hex_format: .asciz "%#018llx"
 
 .section .text
 
