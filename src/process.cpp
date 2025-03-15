@@ -113,7 +113,6 @@ void xdb::process::resume() {
   if (ptrace(PTRACE_CONT, pid_, nullptr, nullptr) < 0) {
     error::send_errno("Failed to PTRACE_CONT");
   }
-  state_ = process_state::running;
 }
 
 xdb::stop_reason xdb::process::wait_on_signal() {
