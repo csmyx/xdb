@@ -1,6 +1,7 @@
 # xdb
 my xdebugger
 参考《Building a Debugger (Early Access) by Sy Brand》一书，实现调试器
+源码链接：https://github.com/TartanLlama/sdb
 
 ## chapter 1
 
@@ -104,3 +105,9 @@ ptrace有多种类型，对应不同动作，当前需要用到一下几种：
 - 在构造函数中使用this指针：本章在process类中新增了一个register成员regs_，在process的构造函数中需要构造regs_，这里有一个有意思的细节，就是我们需要使用this指针来构造regs_，但是此时我们process还没有初始化完成，那么这里使用this指针是安全的吗？~~废话，都这么用了肯定安全~~ but why? because: 我们只是使用this来获取引用，而没有解引用this指针。前者安全是因为：此时已经完成process的内存分配，内存地址的是已经确定了的；后者不安全是因为：这块process的内存还未初始化，解引用访问内存内容是不安全的。总结：只是在构造函数中使用this指针或者引用是安全的，但是解引用访问还未初始化的内存内存就是不安全的。
 - 编译的时候遇到一个的问题：process.cpp和registers.cpp相互include对方的头文件就会报错，但是registers和process有需要相互的类型定义，如何解决呢？其实registres的实现并不需要process类型的完整定义（只需要一个process引用），所以不用include process.hpp，只需要前向声明`class process;` 即可。
 - if constexpr (std::is_floating_point_v<T>): [todo]
+
+
+## chapter 6
+
+测试寄存器读写正确性
+

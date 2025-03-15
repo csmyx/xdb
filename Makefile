@@ -14,6 +14,9 @@ configure:
 build:
 	cmake --build $(BUILD_DIR)
 
+# Target to rebuild the project
+rebuild: clean configure build
+
 # Target to clean the build directory
 clean:
 	rm -rf $(BUILD_DIR)
