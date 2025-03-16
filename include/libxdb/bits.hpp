@@ -1,6 +1,9 @@
 #ifndef XDB_BITS_HPP
 #define XDB_BITS_HPP
 
+#include <algorithm>
+#include <cstdint>
+#include <initializer_list>
 #include <libxdb/types.hpp>
 #include <cstddef>
 #include <cstring>
@@ -31,11 +34,23 @@ namespace xdb {
     std::memcpy(result.data(), &from, sizeof(From));
     return result;
   }
+  inline byte64 as_byte64(std::initializer_list<std::uint8_t> from) {
+    byte64 result{};
+    std::transform(from.begin(), from.end(), result.begin(),
+    [](uint8_t value) { return std::byte{value}; });
+    return result;
+  }
 
   template <class From>
   byte128 as_byte128(const From& from) {
     byte128 result{};
     std::memcpy(result.data(), &from, sizeof(From));
+    return result;
+  }
+  inline byte128 as_byte128(std::initializer_list<std::uint8_t> from) {
+    byte128 result{};
+    std::transform(from.begin(), from.end(), result.begin(),
+    [](uint8_t value) { return std::byte{value}; });
     return result;
   }
   

@@ -1,5 +1,6 @@
 #include <libxdb/pipe.hpp>
 #include <libxdb/process.hpp>
+#include <libxdb/parse.hpp>
 #include <variant>
 #include <fmt/base.h>
 #include <readline.h>
@@ -24,7 +25,9 @@ namespace {
     std::stringstream ss {std::string{str}};
     std::string item;
     while (std::getline(ss, item, delimiter)) {
-      out.push_back(item);
+      if (!item.empty()) {
+        out.push_back(item);
+      }
     }
     return out;
   }
@@ -99,7 +102,50 @@ namespace {
     }
   }
 
-    void handle_register_write(xdb::process & process, const std::vector<std::string>& args) {}
+  xdb::value parse_register_value(xdb::register_info info, std::string_view text) {
+    try {
+      if (info.format == xdb::register_format::uint) {
+        switch (info.size) {
+          case 1:
+            return xdb::to_integer<std::uint8_t>(text).value();
+          case 2:
+            return xdb::to_integer<std::uint16_t>(text).value();
+          case 4:
+            return xdb::to_integer<std::uint32_t>(text).value();
+          case 8:
+            return xdb::to_integer<std::uint64_t>(text).value();
+        }
+      } else if (info.format == xdb::register_format::double_float) {
+        return xdb::to_float<double>(text).value();
+      } else if (info.format == xdb::register_format::long_double) {
+        return xdb::to_float<long double>(text).value();
+      } else if (info.format == xdb::register_format::vector) {
+        if (info.size == 8) {
+          return xdb::to_vector<8>(text).value();
+        } else if (info.size == 16) {
+          return xdb::to_vector<16>(text).value();
+        }
+      }
+    } catch (...) {
+      xdb::error::send("Invalid format");
+    }
+    xdb::error::send("Invalid format");
+  }
+
+  void handle_register_write(xdb::process & process, const std::vector<std::string>& args) {
+    if (args.size() != 4) {
+      std::cerr << "Invalid arguments for register" << std::endl;
+      print_help({ "help", "register" });
+      return;
+    }
+    try {
+      auto info = xdb::register_info_by_name(args[2]);
+      auto value = parse_register_value(info, args[3]);
+      process.get_registers().write(info, value);
+    } catch (xdb::error& e) {
+      std::cerr << e.what() << std::endl;
+    }
+  }
 
     void handle_register_command(xdb::process & process, const std::vector<std::string>& args) {
       if (args.size() < 2) {
