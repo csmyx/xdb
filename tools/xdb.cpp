@@ -38,21 +38,21 @@ namespace {
   }
 
   void print_stop_reason(const xdb::process& process, const xdb::stop_reason& reason) {
-    std::cout << "Process " << process.pid() << ' ';
+    std::string message;
     switch (reason.reason) {
       case xdb::process_state::exited:
-        std::cout << "exited with status " << static_cast<int>(reason.info);
+        message = fmt::format("exited with status {}", static_cast<int>(reason.info));
         break;
       case xdb::process_state::terminated:
-        std::cout << "terminated with signal " << sigabbrev_np(reason.info);
+        message = fmt::format("terminated with signal {}", sigabbrev_np(reason.info));
         break;
       case xdb::process_state::stopped:
-        std::cout << "stopped with signal " << sigabbrev_np(reason.info);
+        message = fmt::format("stopped with signal {} at {:#x}", sigabbrev_np(reason.info), process.get_pc().addr());
         break;
       case xdb::process_state::running:
         break;
     }
-    std::cout << std::endl;
+    fmt::println("Process {} {}", process.pid(), message);
   }
 
   void print_help(const std::vector<std::string>& args) {
@@ -85,14 +85,14 @@ namespace {
       for (auto& info: xdb::g_register_infos) {
         if (args.size() == 3 || info.type == xdb::register_type::gpr) {
           auto value =  process.get_registers().read(info);
-          fmt::print("{}:\t{}\n", info.name, std::visit(format, value));
+          fmt::print("[{:<10}]: {}\n", info.name, std::visit(format, value));
         }
       }
     } else if (args.size() == 3) {
       try {
         auto& info = xdb::register_info_by_name(args[2]);
         auto value = process.get_registers().read(info);
-        fmt::print("{}:\t{}\n", info.name, std::visit(format, value));
+        fmt::print("[{:<10}]: {}\n", info.name, std::visit(format, value));
       } catch(xdb::error& e) {
         fmt::print(stderr, "{}: {}\n", e.what(), args[2]);
       }
