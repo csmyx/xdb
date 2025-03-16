@@ -1,3 +1,4 @@
+#include <fmt/base.h>
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <cstdint>
@@ -6,6 +7,9 @@
 #include <libxdb/pipe.hpp>
 #include <csignal>
 #include <fstream>
+#include "libxdb/types.hpp"
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 using namespace xdb;
 namespace {
@@ -166,5 +170,73 @@ TEST_CASE("read rigister wordks", "[register]") {
     REQUIRE(value == 64.125L);
     proc->resume();
     proc->wait_on_signal();
+  }
+}
+
+#include <libxdb/parse.hpp>
+TEST_CASE("parse register value", "[parser]") {
+  {
+    std::vector<std::pair<std::string, std::uint32_t>> list = {
+      {"0x12", 18},
+      {"12", 12},
+    };
+    for (auto& [raw, expect]: list) {
+      auto v = to_integer<std::uint32_t>(raw);
+      REQUIRE(v.has_value());
+      // fmt::println("{}, {}", v.value(), expect);
+      REQUIRE(v.value() == expect);
+    }
+  }
+
+  {
+    std::vector<std::pair<std::string, xdb::byte64>> list = {
+      {"[1,2,3,4,5,6,7,8]", as_byte64({1,2,3,4,5,6,7,8})},
+    };
+    for (auto& [raw, expect]: list) {
+      auto v = to_vector<8>(raw);
+      REQUIRE(v.has_value());
+      // fmt::println("{}, {}", v.value(), expect);
+      REQUIRE(v.value() == expect);
+    }
+  }
+
+  {
+    std::vector<std::pair<std::string, xdb::byte128>> list = {
+      {"[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]", 
+        as_byte128({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16})
+      }
+    };
+    for (auto& [raw, expect]: list) {
+      auto v = to_vector<16>(raw);
+      REQUIRE(v.has_value());
+      // fmt::println("{}, {}", v.value(), expect);
+      REQUIRE(v.value() == expect);
+    }
+  }
+
+  {
+    std::vector<std::tuple<std::string, xdb::byte128, bool>> list = {
+      {"  [  1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,]  ", 
+        as_byte128({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}),
+        true
+      },
+      {"  [  1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,]  ", 
+        as_byte128({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}),
+        false
+      },
+      {"  [  1, 2,3,4,5,6,7,8,9,10,11,12,13,14,15,,,]  ", 
+        as_byte128({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}),
+        false
+      }
+    };
+    for (auto& [raw, expect, flag]: list) {
+      auto v = to_vector<16>(raw);
+      if (flag) {
+        REQUIRE(v.has_value());
+        REQUIRE(v.value() == expect);
+      } else {
+        REQUIRE(!v.has_value());
+      }
+    }
   }
 }
