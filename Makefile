@@ -8,7 +8,7 @@ all: build test
 
 # Target to configure the project
 configure:
-	cmake -S . -B $(BUILD_DIR)
+	cmake -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=Debug
 
 # Target to build the project
 build:

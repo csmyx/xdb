@@ -29,6 +29,8 @@ my xdebugger
 通过使用vcpkg的清单模式进行依赖库管理
 - 参考文档：https://learn.microsoft.com/zh-cn/vcpkg/consume/manifest-mode?tabs=msbuild%2Cbuild-MSBuild
 
+#### CMake用法
+  构建的时候，设置CMAKE_BUILD_TYPE=Debug，buid所有目标时会添加调试符号，可以简单理解为和add_compile_options(-g)等价，不再需要手动调用target_compile_options(xxx PRIVATE -g)为目标添加编译选项。
 
 ## chapter 2
   介绍编译调试的相关基础知识，无代码实现
@@ -110,4 +112,10 @@ ptrace有多种类型，对应不同动作，当前需要用到一下几种：
 ## chapter 6
 
 测试寄存器读写正确性
+
+
+## chapter 7
+
+1. 相对偏移地址如何计算？
+2. why page-by-page read?
 

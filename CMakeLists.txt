@@ -5,6 +5,9 @@ set(CMAKE_TOOLCHAIN_FILE "/home/hugo/vcpkg_dir/vcpkg/scripts/buildsystems/vcpkg.
 set(CMAKE_C_COMPILER "clang")
 set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+endif()
 ###
 
 project("xdb" LANGUAGES CXX ASM)
