@@ -3,10 +3,10 @@
 
 #include <cstddef>
 
-#include "libxdb/process.hpp"
 #include "libxdb/types.hpp"
 
 namespace xdb {
+class process;
 class breakpoint_site {
  public:
   breakpoint_site() = delete;

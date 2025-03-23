@@ -10,8 +10,9 @@
 #include <filesystem>
 #include <optional>
 #include <vector>
+#include "libxdb/stoppoint_manager.hpp"
 #include "libxdb/types.hpp"
-
+#include <libxdb/breakpoint_site.hpp>
 
 namespace xdb {
   enum class process_state {
@@ -55,6 +56,11 @@ namespace xdb {
         return xdb::virt_addr(regs_->read_by_id<std::uint64_t>(register_id::rip));
       } 
 
+
+      // breakpoint management
+      breakpoint_site& create_breakpoint_site(virt_addr addr);
+
+
     private: 
       process(pid_t pid, bool termianted_on_end, bool is_attached)
         : pid_(pid), terminated_on_end_(termianted_on_end),
@@ -68,6 +74,7 @@ namespace xdb {
       bool terminated_on_end_ = true;
       bool is_attached_ = true;
       std::unique_ptr<registers> regs_;
+      stoppoint_manager<breakpoint_site> breakpoint_sites_;
   };
 
 }

@@ -240,3 +240,9 @@ TEST_CASE("parse register value", "[parser]") {
     }
   }
 }
+
+TEST_CASE("Can create breakpoint site", "[breakpoint]") {
+  auto proc = process::launch("targets/run_endlessly");
+  auto& site = proc->create_breakpoint_site(virt_addr{ 42 });
+  REQUIRE(site.address().addr() == 42);
+}

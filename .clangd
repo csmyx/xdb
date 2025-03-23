@@ -1,2 +1,7 @@
 CompileFlags:
   CompilationDatabase: build
+InlayHints:
+  Designators: Yes
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes

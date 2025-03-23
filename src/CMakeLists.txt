@@ -1,4 +1,4 @@
-add_library(libxdb process.cpp pipe.cpp registers.cpp)
+add_library(libxdb process.cpp pipe.cpp registers.cpp breakpoint_site.cpp)
 add_library(xdb::libxdb ALIAS libxdb)
 
 set_target_properties(

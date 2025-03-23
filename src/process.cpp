@@ -8,15 +8,16 @@
 #include <unistd.h>
 #include <algorithm>
 
+using std::make_unique;
+
 namespace xdb {
-  // exit the process after sending error message to channel
-  [[noreturn]]
-  void exit_with_error(xdb::pipe& channel, std::string const& prefix) {
-    auto message = prefix + ": " + std::strerror(errno);
-    channel.write(reinterpret_cast<std::byte*>(message.data()), message.size());
-    exit(-1);
+// exit the process after sending error message to channel
+[[noreturn]] void exit_with_error(xdb::pipe& channel, std::string const& prefix) {
+  auto message = prefix + ": " + std::strerror(errno);
+  channel.write(reinterpret_cast<std::byte*>(message.data()), message.size());
+  exit(-1);
   }
-}
+  }  // namespace xdb
 
 xdb::stop_reason::stop_reason(int wait_status) {
   if (WIFSTOPPED(wait_status)) {
@@ -174,4 +175,11 @@ void xdb::process::write_gprs(const user_regs_struct& gprs) {
     error::send_errno("Could not write GPR registers");
   }
 }
+
+xdb::breakpoint_site& xdb::process::create_breakpoint_site(xdb::virt_addr addr) {
+  auto site = std::unique_ptr<breakpoint_site>(new breakpoint_site(*this, addr));
+  return breakpoint_sites_.push(std::move(site));
+}
+
+
 
